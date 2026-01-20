@@ -1,0 +1,10 @@
+void setup() {
+  Serial.begin(9600);
+  if (!ads.begin()) {
+    Serial.println("ADS1115 NOT FOUND");
+    while (1);
+  }
+  Serial.println("ADS1115 FOUND");
+}
+
+void loop() {}   // ← EMPTY
