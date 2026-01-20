@@ -1,0 +1,89 @@
+#include <Wire.h>
+#include <Adafruit_ADS1X15.h>
+
+Adafruit_ADS1115 ads;
+
+/* ===================== TUNING VALUES ===================== */
+// Minimum voltage spike above baseline to count as a peak
+float PEAK_DELTA_V = 0.20;        // <-- tune: 0.16 to 0.29 V
+
+// Number of peaks in one window to classify PHONE ON
+int PEAKS_ON_THRESHOLD = 3;       // <-- tune: 2–5
+
+// Time window to count peaks (milliseconds)
+unsigned long WINDOW_MS = 5000;   // <-- tune: 3000–8000
+/* ========================================================= */
+
+float baseline = 0.0;
+float prevDelta = 0.0;
+
+int peakCount = 0;
+unsigned long windowStart = 0;
+
+void setup() {
+  Serial.begin(9600);
+
+  if (!ads.begin()) {
+    Serial.println("ERROR: ADS1115 NOT FOUND");
+    while (1);
+  }
+
+  ads.setGain(GAIN_TWOTHIRDS); // ±6.144V range
+
+  Serial.println("Calibrating baseline (NO PHONE NEARBY)...");
+
+  // ---- Baseline calibration ----
+  float sum = 0.0;
+  for (int i = 0; i < 50; i++) {
+    int16_t raw = ads.readADC_SingleEnded(0);
+    float v = raw * 0.1875 / 1000.0;
+    sum += v;
+    delay(20);
+  }
+  baseline = sum / 50.0;
+
+  Serial.print("Baseline Voltage: ");
+  Serial.print(baseline, 3);
+  Serial.println(" V");
+
+  windowStart = millis();
+}
+
+void loop() {
+  // Read voltage
+  int16_t raw = ads.readADC_SingleEnded(0);
+  float voltage = raw * 0.1875 / 1000.0;
+
+  // Change from baseline
+  float delta = voltage - baseline;
+
+  // ---- PEAK DETECTION ----
+  // Detect rising edge crossing threshold
+  if (delta > PEAK_DELTA_V && prevDelta <= PEAK_DELTA_V) {
+    peakCount++;
+  }
+
+  prevDelta = delta;
+
+  // ---- WINDOW DECISION ----
+  if (millis() - windowStart >= WINDOW_MS) {
+    if (peakCount >= PEAKS_ON_THRESHOLD) {
+      Serial.print("PHONE ON | ");
+    } else {
+      Serial.print("PHONE OFF | ");
+    }
+
+    Serial.print("Peaks: ");
+    Serial.print(peakCount);
+    Serial.print(" | ΔV max approx >= ");
+    Serial.print(PEAK_DELTA_V, 2);
+    Serial.print(" V | Baseline: ");
+    Serial.println(baseline, 3);
+
+    // Reset window
+    peakCount = 0;
+    windowStart = millis();
+  }
+
+  delay(20); // ~50 Hz sampling
+}
