@@ -1,0 +1,54 @@
+/*
+ * RGB LED Control
+ * Pins: 9 (Red), 10 (Green), 11 (Blue)
+ * Hardware: Connect through 220-ohm resistors to PWM pins
+ */
+
+int redPin = 9;
+int greenPin = 10;
+int bluePin = 11;
+
+void setup() {
+  // Initialize the pins as outputs
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+  pinMode(bluePin, OUTPUT);  
+}
+ 
+void loop() {
+  // Step-by-step color sequence
+  
+  setColor(1, 0, 0);    // Red (Very dim)
+  delay(1000);
+  
+  setColor(50, 0, 0);   // Red (Medium)
+  delay(1000);
+  
+  setColor(140, 0, 0);  // Red (Bright)
+  delay(1000);
+  
+  setColor(255, 0, 0);  // Red (Full)
+  delay(1000);
+  
+  setColor(0, 255, 0);  // Green
+  delay(1000);
+  
+  setColor(0, 0, 255);  // Blue
+  delay(1000);
+  
+  setColor(255, 255, 0);// Yellow (Red + Green)
+  delay(1000);  
+  
+  setColor(80, 0, 80);  // Purple (Red + Blue)
+  delay(1000);
+  
+  setColor(255, 50, 0); // Orange
+  delay(1000);
+}
+ 
+// Function to mix the light colors
+void setColor(int red, int green, int blue) {
+  analogWrite(redPin, red);
+  analogWrite(greenPin, green);
+  analogWrite(bluePin, blue);  
+}
