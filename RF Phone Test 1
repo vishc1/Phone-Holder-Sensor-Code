@@ -1,0 +1,105 @@
+/*************************************************
+ * FINAL: Sensor Detection Experiment Logger
+ * 5-second sampling window per trial
+ *
+ * Baseline (FINAL):
+ *  - Mean: 1.5311 V
+ *  - Std Dev: 0.0460 V
+ *  - Normal (±1σ): 1.4851 V to 1.5772 V
+ *
+ * Detection threshold: ±3σ
+ *  - Lower: 1.3931 V
+ *  - Upper: 1.6691 V
+ *
+ * Hardware:
+ *  - Sensor output -> A0
+ *  - Arduino Uno/Nano
+ *************************************************/
+
+#include <math.h>
+
+// ---------- USER SETTINGS ----------
+const int SENSOR_PIN = A0;
+const float VREF = 5.0;              // Change to 3.3 if needed
+const int NUM_SAMPLES = 500;          // 500 samples
+const int SAMPLE_DELAY_MS = 10;       // 10 ms between samples
+// => 500 × 10 ms = 5 seconds per trial
+
+const unsigned long TRIAL_GAP_MS = 3000; // Pause between trials
+
+// ---------- FINAL BASELINE (DO NOT CHANGE) ----------
+const float BASELINE_MEAN = 1.5311;
+const float BASELINE_STD  = 0.0460;
+
+// ---------- THRESHOLDS (LOCKED) ----------
+const float LOWER_1SIG = 1.4851;
+const float UPPER_1SIG = 1.5772;
+
+const float LOWER_3SIG = 1.3931;
+const float UPPER_3SIG = 1.6691;
+
+// ---------- TRIAL COUNTER ----------
+int trialNumber = 1;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(SENSOR_PIN, INPUT);
+
+  Serial.println("=========================================");
+  Serial.println(" FINAL SENSOR TEST LOGGER (5s TRIALS) ");
+  Serial.println("=========================================");
+  Serial.print("Baseline Mean (V): "); Serial.println(BASELINE_MEAN, 4);
+  Serial.print("Baseline Std Dev (V): "); Serial.println(BASELINE_STD, 4);
+  Serial.print("Normal Range ±1σ (V): ");
+  Serial.print(LOWER_1SIG, 4);
+  Serial.print(" to ");
+  Serial.println(UPPER_1SIG, 4);
+  Serial.print("Detection Threshold ±3σ (V): ");
+  Serial.print(LOWER_3SIG, 4);
+  Serial.print(" to ");
+  Serial.println(UPPER_3SIG, 4);
+  Serial.println("-----------------------------------------");
+  Serial.println("Trial,Mean_V,StdDev_V,In_1sigma,Detected_3sigma");
+}
+
+void loop() {
+
+  float sum = 0.0;
+  float sumSq = 0.0;
+
+  // ---------- SAMPLE COLLECTION (5 seconds) ----------
+  for (int i = 0; i < NUM_SAMPLES; i++) {
+    int raw = analogRead(SENSOR_PIN);
+    float voltage = raw * (VREF / 1023.0);
+
+    sum += voltage;
+    sumSq += voltage * voltage;
+
+    delay(SAMPLE_DELAY_MS);
+  }
+
+  // ---------- STATISTICS ----------
+  float mean = sum / NUM_SAMPLES;
+  float variance = (sumSq / NUM_SAMPLES) - (mean * mean);
+  if (variance < 0) variance = 0;  // numerical safety
+  float stdDev = sqrt(variance);
+
+  // ---------- FLAGS ----------
+  bool in1sigma = (mean >= LOWER_1SIG && mean <= UPPER_1SIG);
+  bool detected3sigma = (mean < LOWER_3SIG || mean > UPPER_3SIG);
+
+  // ---------- OUTPUT (CSV FORMAT) ----------
+  Serial.print(trialNumber);
+  Serial.print(",");
+  Serial.print(mean, 4);
+  Serial.print(",");
+  Serial.print(stdDev, 4);
+  Serial.print(",");
+  Serial.print(in1sigma ? "YES" : "NO");
+  Serial.print(",");
+  Serial.println(detected3sigma ? "YES" : "NO");
+
+  trialNumber++;
+
+  delay(TRIAL_GAP_MS);  // Pause before next trial
+}
