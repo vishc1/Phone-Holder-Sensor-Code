@@ -1,0 +1,35 @@
+/*************************************************
+ * BASIC VOLTAGE TEST (NO THRESHOLDS)
+ * Reads A0 and prints voltage once every 5 seconds.
+ *
+ * Wiring:
+ *  - Sensor analog output -> A0
+ *  - GND common
+ *
+ * If you see nonsense values, check:
+ *  - correct VREF (5.0 vs 3.3)
+ *  - sensor ground connected to Arduino GND
+ *************************************************/
+
+const int SENSOR_PIN = A0;
+const float VREF = 5.0;   // change to 3.3 if your board uses 3.3V reference
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(SENSOR_PIN, INPUT);
+  Serial.println("Basic Voltage Test: printing A0 voltage every 5 seconds");
+  Serial.println("Time_ms,Raw,Voltage_V");
+}
+
+void loop() {
+  int raw = analogRead(SENSOR_PIN);
+  float voltage = raw * (VREF / 1023.0);
+
+  Serial.print(millis());
+  Serial.print(",");
+  Serial.print(raw);
+  Serial.print(",");
+  Serial.println(voltage, 4);
+
+  delay(5000); // one output every 5 seconds
+}
