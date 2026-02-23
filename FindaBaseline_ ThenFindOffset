@@ -1,0 +1,71 @@
+#include <Wire.h>
+#include <Adafruit_ADS1X15.h>
+
+Adafruit_ADS1115 ads;
+
+float masterBaseline = 0;
+int trialNumber = 0;
+
+void setup() {
+  Serial.begin(115200);
+  Wire.begin();
+  if (!ads.begin()) { Serial.println("ADS1115 Fail"); while (1); }
+  
+  // GAIN_ONE: Range +/- 4.096V (1 bit = 0.125mV)
+  ads.setGain(GAIN_ONE);
+
+  Serial.println("========================================");
+  Serial.println("   RF EXPERIMENT: 10-TRIAL MODE");
+  Serial.println("========================================");
+  Serial.println("STEP 1: CAPTURING MASTER BASELINE (10s)");
+  Serial.println("Ensure NO phone is near the antenna...");
+  
+  float sum = 0;
+  long count = 0;
+  unsigned long startTime = millis();
+  
+  // Sample for exactly 10 seconds
+  while (millis() - startTime < 10000) {
+    int16_t raw = ads.readADC_SingleEnded(0);
+    sum += (raw * 0.000125);
+    count++;
+    if (count % 200 == 0) Serial.print("."); 
+    delay(5); 
+  }
+  
+  masterBaseline = sum / count;
+  Serial.println("\n\nMASTER BASELINE LOCKED: " + String(masterBaseline, 6) + " V");
+  Serial.println("----------------------------------------");
+  Serial.println("READY FOR TRIALS. Place phone, then press any key to start.");
+}
+
+void loop() {
+  // Wait for user to send a character in Serial Monitor to start a trial
+  if (Serial.available() > 0) {
+    while(Serial.available() > 0) { Serial.read(); } // Clear buffer
+    
+    trialNumber++;
+    Serial.println("\n>>> STARTING 10-SECOND TRIAL #" + String(trialNumber));
+    
+    float trialSum = 0;
+    long trialCount = 0;
+    unsigned long trialStart = millis();
+
+    while (millis() - trialStart < 10000) {
+      int16_t raw = ads.readADC_SingleEnded(0);
+      trialSum += (raw * 0.000125);
+      trialCount++;
+      if (trialCount % 200 == 0) Serial.print("."); 
+      delay(5);
+    }
+
+    float trialAverage = trialSum / trialCount;
+    float diff = masterBaseline - trialAverage; // The "Drop"
+
+    Serial.println("\n--- TRIAL #" + String(trialNumber) + " COMPLETE ---");
+    Serial.print("Avg Voltage: "); Serial.print(trialAverage, 6); Serial.println(" V");
+    Serial.print("Voltage Drop: "); Serial.print(diff, 6); Serial.println(" V");
+    Serial.println("----------------------------------------");
+    Serial.println("Adjust setup if needed, then press any key for next trial...");
+  }
+}
