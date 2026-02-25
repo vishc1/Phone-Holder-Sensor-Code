@@ -1,0 +1,46 @@
+void setup() {
+  // 1. Standard R3 keyword for the AREF pin
+  analogReference(EXTERNAL); 
+  
+  // Note: R3 does not support analogReadResolution, it is always 10-bit.
+
+  Serial.begin(9600);
+  delay(1000);
+  Serial.println("--- ARDUINO R3: STABLE TRIAL MODE ---");
+}
+
+void loop() {
+  long rangeCount = 5000; 
+  float vOutSum = 0;
+  float VoutMin = 3.3; 
+
+  for (int i = 0; i < rangeCount; i++) {
+    int rawValue = analogRead(A0);
+    
+    // 2. R3 MATH: Divide by 1024.0 (10-bit resolution)
+    float vOut = (rawValue * 3.3) / 1024.0;
+
+    if (vOut < VoutMin && vOut > 0.1) {
+      VoutMin = vOut; 
+    }
+    vOutSum += vOut;
+  }
+
+  float VoutAverage = vOutSum / rangeCount;
+
+  // AD8317 Logic
+  float intercept = 2.0; 
+  float slope = -0.022; 
+  float dBm = (VoutMin - intercept) / slope;
+
+  // 3. Printing results
+  Serial.print("Avg: ");
+  Serial.print(VoutAverage, 3); // R3 is accurate to 3 decimals
+  Serial.print("V | Peak: ");
+  Serial.print(VoutMin, 3);
+  Serial.print("V | Power: ");
+  Serial.print(dBm, 1);
+  Serial.println(" dBm");
+
+  delay(500); 
+}
