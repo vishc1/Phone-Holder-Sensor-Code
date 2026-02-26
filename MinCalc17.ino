@@ -1,7 +1,7 @@
 void setup() {
   // 1. TELL ARDUINO TO USE THE PIN, NOT THE INTERNAL 5V
-  analogReference(AR_EXTERNAL); 
-  
+  //analogReference(AR_EXTERNAL); 
+  analogReference(EXTERNAL); 
   // 2. WAIT A MOMENT FOR VOLTAGE TO SETTLE
   delay(1000); 
   
@@ -9,7 +9,7 @@ void setup() {
 }
 
 void loop() {
-  int rangeCount = 20000;
+  int rangeCount = 5000;
   int i = 0;
   int rawValue = 0;
   float vOut = 0;
