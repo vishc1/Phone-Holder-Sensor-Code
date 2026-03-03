@@ -1,75 +1,75 @@
 // --- TUNE THESE VALUES ---
-float threshold = 0.015;    // V drop required to count as a "hit"
-int requiredHits = 5;       // How many seconds in a row to confirm
+float threshold = 0.07;      // The 0.15V dip we are looking for
+int windowSize = 5;          // Checking in 5-second blocks
 // -----------------------
 
-float baselineV = 0;
-int triggerCount = 0;       // Keeps track of consecutive hits
+float baselineMinV = 0;
 
 void setup() {
   analogReference(AR_EXTERNAL); 
   Serial.begin(9600);
   delay(1000); 
   
-  Serial.println("STEP 1: CALIBRATING BASELINE (10 SECONDS)...");
-  
-  float tenSecondSum = 0;
+  // PHASE 1: 10-SECOND CALIBRATION (AVERAGING THE MINS)
+  Serial.println("SYSTEM START: CALIBRATING BASELINE (10 SEC)...");
+  float sumOfMins = 0;
   for (int j = 0; j < 10; j++) {
-    float oneSecondAvg = getOneSecondAverage();
-    tenSecondSum += oneSecondAvg;
-    Serial.print("Baseline Reading "); Serial.print(j+1); 
-    Serial.print("/10: "); Serial.println(oneSecondAvg, 4);
+    float oneSecMin = getOneSecondMin();
+    sumOfMins += oneSecMin;
+    Serial.print("Sampling Baseline: "); Serial.print(j+1); Serial.println("/10");
   }
+  baselineMinV = sumOfMins / 10.0;
   
-  baselineV = tenSecondSum / 10.0;
   Serial.println("---------------------------------------");
-  Serial.print("BASELINE SET AT: "); Serial.print(baselineV, 4); Serial.println(" V");
-  Serial.println("MONITORING (NEEDS 5 CONSECUTIVE DIPS)...");
+  Serial.print("BASELINE MIN: "); Serial.print(baselineMinV, 4); Serial.println(" V");
+  Serial.println("TELEMETRY: 3-MODE DETECTION ACTIVE");
   Serial.println("---------------------------------------");
 }
 
 void loop() {
-  float currentMin = getOneSecondMin();
-  float dipAmount = baselineV - currentMin;
+  int hitCount = 0;
+  Serial.println("Analyzing 5-second window...");
+  
+  for (int i = 1; i <= windowSize; i++) {
+    float currentMin = getOneSecondMin();
+    float dipAmount = baselineMinV - currentMin;
 
-  // Check if this specific second was a "hit"
-  if (dipAmount > threshold) {
-    triggerCount++; // Add to the streak
-    Serial.print(" [!] DIP DETECTED ("); 
-    Serial.print(triggerCount); 
-    Serial.println("/5)");
-  } else {
-    triggerCount = 0; // RESET if we have a clean second
-    Serial.println(" [.] Signal Clear (Streak Reset)");
+    if (dipAmount >= threshold) {
+      hitCount++;
+      Serial.print("  [Sec "); Serial.print(i); Serial.print("]: HIT");
+    } else {
+      Serial.print("  [Sec "); Serial.print(i); Serial.print("]: CLEAR");
+    }
+    Serial.print(" (Dip: "); Serial.print(dipAmount, 4); Serial.println(")");
   }
 
-  // Final Decision Logic
-  if (triggerCount >= requiredHits) {
-    Serial.println(" >>>>>>> ALERT: PHONE CONFIRMED ACTIVE <<<<<<< ");
-    // triggerCount = 0; // Optional: Reset after alert, or keep alerting
+  // --- 3-MODE TELEMETRY LOGIC ---
+  Serial.print("RESULT: "); Serial.print(hitCount); Serial.print("/5 hits -> ");
+  
+  if (hitCount >= 2) {
+    // 2, 3, 4, or 5 hits all mean the phone is actively transmitting
+    Serial.println("TELEMETRY: [ PHONE ON / ACTIVE ]");
+  } 
+  else if (hitCount == 1) {
+    // Exactly 1 hit is the "periodic ping" from Find My
+    Serial.println("TELEMETRY: [ PHONE OFF - FIND MY ACTIVE ]");
+  } 
+  else {
+    // 0 hits means silence
+    Serial.println("TELEMETRY: [ PHONE COMPLETELY OFF ]");
   }
-
-  // Small delay is handled by the 10,000 samples in the helper functions
+  
+  Serial.println("---------------------------------------");
 }
 
-// HELPER: Samples for ~1 second to find the MINIMUM spike
+// HELPER: Collects the absolute MINIMUM voltage over 10,000 samples
 float getOneSecondMin() {
   int rangeCount = 10000;
-  float vMin = 4.0;
+  float vMin = 4.0; 
   for (int i = 0; i < rangeCount; i++) {
     int raw = analogRead(A0);
     float v = (raw * 3.3) / 1024.0;
     if (v < vMin) vMin = v;
   }
   return vMin;
-}
-
-// HELPER: Samples for ~1 second to find the AVERAGE for baseline
-float getOneSecondAverage() {
-  int rangeCount = 10000;
-  float sum = 0;
-  for (int i = 0; i < rangeCount; i++) {
-    sum += (analogRead(A0) * 3.3) / 1024.0;
-  }
-  return sum / rangeCount;
 }
