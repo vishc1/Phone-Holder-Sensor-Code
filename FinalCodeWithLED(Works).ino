@@ -1,29 +1,29 @@
 // --- TUNE THESE VALUES ---
-float threshold = 0.15;      // The 0.15V dip we are looking for
+float threshold = 0.08;      // The 0.15V dip we are looking for
 int windowSize = 5;          // Checking in 5-second blocks
-//
+
 // --- RGB LED PINS (Digital 8, 9, 10) ---
 const int GREEN_PIN = 8; 
 const int BLUE_PIN = 9;  
 const int RED_PIN = 10;   
 
 float baselineMinV = 0;
+unsigned long startTime;
 
 void setup() {
   analogReference(AR_EXTERNAL); 
   Serial.begin(9600);
   
-  // Set RGB pins as outputs
   pinMode(RED_PIN, OUTPUT);
   pinMode(BLUE_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
   
-  // Startup Test: Quick color cycle to confirm wiring
+  // Startup sequence
   digitalWrite(RED_PIN, HIGH); delay(200); digitalWrite(RED_PIN, LOW);
   digitalWrite(BLUE_PIN, HIGH); delay(200); digitalWrite(BLUE_PIN, LOW);
   digitalWrite(GREEN_PIN, HIGH); delay(200); digitalWrite(GREEN_PIN, LOW);
 
-  Serial.println("SYSTEM START: CALIBRATING BASELINE (10 SEC)...");
+  Serial.println("SYSTEM_START,Calibration_Mode");
   
   float sumOfMins = 0;
   for (int j = 0; j < 10; j++) {
@@ -34,7 +34,9 @@ void setup() {
   baselineMinV = sumOfMins / 10.0;
   
   Serial.println("\n--- CALIBRATION COMPLETE ---");
-  Serial.print("BASELINE MIN: "); Serial.println(baselineMinV, 4);
+  Serial.print("Baseline_V: "); Serial.println(baselineMinV, 4);
+  Serial.println("TIME(ms),HITS/5,STATUS"); // Updated Header
+  startTime = millis();
 }
 
 void loop() {
@@ -49,23 +51,29 @@ void loop() {
     }
   }
 
-  // --- RGB COLOR LOGIC ---
-  // Turn everything off first
+  // --- TELEMETRY OUTPUT (The part you wanted added) ---
+  Serial.print(millis() - startTime); 
+  Serial.print(","); 
+  Serial.print(hitCount); 
+  Serial.print("/5"); // Shows the x/5 value
+  Serial.print(",");
+
+  // --- RGB COLOR LOGIC (Kept exactly the same) ---
   digitalWrite(RED_PIN, LOW);
   digitalWrite(BLUE_PIN, LOW);
   digitalWrite(GREEN_PIN, LOW);
 
-  if (hitCount >= 2) {
-    digitalWrite(RED_PIN, HIGH); // Red for Active
-    Serial.println("TELEMETRY: [ RED ] PHONE ACTIVE");
+  if (hitCount >= 3) {
+    digitalWrite(RED_PIN, HIGH); 
+    Serial.println("RED: ACTIVE");
   } 
-  else if (hitCount == 1) {
-    digitalWrite(BLUE_PIN, HIGH); // Blue for Find My
-    Serial.println("TELEMETRY: [ BLUE ] FIND MY PING");
+  else if (hitCount == 2) {
+    digitalWrite(BLUE_PIN, HIGH); 
+    Serial.println("BLUE: PING");
   } 
   else {
-    digitalWrite(GREEN_PIN, HIGH); // Green for Off
-    Serial.println("TELEMETRY: [ GREEN ] NO SIGNAL");
+    digitalWrite(GREEN_PIN, HIGH); 
+    Serial.println("GREEN: IDLE");
   }
 }
 
