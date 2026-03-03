@@ -1,7 +1,7 @@
 // --- TUNE THESE VALUES ---
 float threshold = 0.15;      // The 0.15V dip we are looking for
 int windowSize = 5;          // Checking in 5-second blocks
-
+//
 // --- RGB LED PINS (Digital 8, 9, 10) ---
 const int GREEN_PIN = 8; 
 const int BLUE_PIN = 9;  
