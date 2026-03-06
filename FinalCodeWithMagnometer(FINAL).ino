@@ -3,7 +3,7 @@
 
 // --- TUNE THESE VALUES ---
 float threshold = 0.08;      
-float magThreshold = 0.15;   
+float magThreshold = 0.11;//0.15   
 int windowSize = 5;          
 
 const int GREEN_PIN = 8; 
