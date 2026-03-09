@@ -1,7 +1,4 @@
-/*************************************************
- * ADS1115 BASIC VOLTAGE TEST
- * Reads A0 and prints voltage every 5 seconds
- *************************************************/
+
 
 #include <Wire.h>
 #include <Adafruit_ADS1X15.h>
@@ -17,7 +14,7 @@ void setup() {
     while (1);
   }
 
-  // Gain = +/- 4.096V  (1 bit = 0.125 mV)
+ 
   ads.setGain(GAIN_ONE);
 
   Serial.println("ADS1115 Basic Voltage Test");
