@@ -1,7 +1,7 @@
 #include <Adafruit_QMC5883P.h>
 #include <Wire.h>
 
-// --- TUNE THESE VALUES ---
+
 float threshold = 0.08;      
 float magThreshold = 0.11;//0.15   
 int windowSize = 5;          
@@ -23,10 +23,10 @@ void setup() {
   pinMode(BLUE_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
   
-  // 1. Start I2C
+
   Wire.begin();
 
-  // 2. Initialize Magnetometer
+
   if (!qmc.begin()) {
     Serial.println("CRITICAL: QMC5883P not found! Check SCL/SDA wires.");
     while(1); 
@@ -34,7 +34,7 @@ void setup() {
   qmc.setMode(QMC5883P_MODE_NORMAL);
   qmc.setRange(QMC5883P_RANGE_2G);
 
-  // Startup sequence
+
   digitalWrite(RED_PIN, HIGH); delay(200); digitalWrite(RED_PIN, LOW);
   digitalWrite(BLUE_PIN, HIGH); delay(200); digitalWrite(BLUE_PIN, LOW);
   digitalWrite(GREEN_PIN, HIGH); delay(200); digitalWrite(GREEN_PIN, LOW);
@@ -87,7 +87,7 @@ void loop() {
     }
   }
 
-  // --- TELEMETRY OUTPUT ---
+  //  TELEMETRY OUTPUT 
   Serial.print(millis() - startTime); 
   Serial.print(","); 
   Serial.print(hitCount); 
@@ -119,7 +119,7 @@ float getOneSecondMin() {
     float v = (raw * 3.3) / 1024.0;
     if (v < vMin) vMin = v;
     
-    // Add a tiny micro-delay every 1000 samples to let the CPU handle I2C
+    
     if (i % 1000 == 0) delayMicroseconds(10); 
   }
   return vMin;
