@@ -19,3 +19,6 @@ The Problem (Phase 1 vs. Phase 2)
 In Phase 1, we utilized the ADS1115 at its maximum 860 Samples Per Second (SPS). While accurate in voltage resolution, it proved too slow to catch the nanosecond-duration pulses of 4G/5G signals.
 
 Finishing Accuracy was around 99%
+
+Submitted to Synopsys Science Fair 2026
+IEEE/3rd
