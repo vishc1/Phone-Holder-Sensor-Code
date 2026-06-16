@@ -24,4 +24,4 @@ Data is saved from testing. Over 1000 different data points.
 Submitted to Synopsys Science Fair 2026
 Awards:
 IEEE Award 1st Place
-3rd in Electrical Engineering Category (honorable Mention)
+3rd in Electrical Engineering Category (Honorable Mention)
