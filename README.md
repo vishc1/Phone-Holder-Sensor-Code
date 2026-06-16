@@ -22,5 +22,6 @@ Finishing Accuracy was around 99%
 Data is saved from testing. Over 1000 different data points.
 
 Submitted to Synopsys Science Fair 2026
-IEEE Award 1st
-3rd(honorable Mention
+Awards:
+IEEE Award 1st Place
+3rd in Electrical Engineering Category (honorable Mention)
