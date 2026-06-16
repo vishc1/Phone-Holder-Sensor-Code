@@ -22,3 +22,4 @@ Finishing Accuracy was around 99%
 
 Submitted to Synopsys Science Fair 2026
 IEEE/3rd
+Good
